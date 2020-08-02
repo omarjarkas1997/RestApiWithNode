@@ -15,10 +15,19 @@ router.get('/',(req,res) => {
 router.get('/users', function(req, res, next){
     var users;
     User.find({}, (err, users) => {
+        if(err){
+            res.status(err.status);
+            return next(err);
+        }
+        if(users.length == 0){
+            var err = new Error("There are no users in the System!");
+            res.status(400);
+            return next(err);
+        }
         users.forEach(user => {
             console.log(user.firstName+" has a password "+user.email);
-            res.json(users);
-        })
+        });
+        res.json(users);
     });
 });
 
@@ -29,21 +38,36 @@ router.post('/register', function(req,res,next) {
     console.log(body);
     if( body.firstName &&  body.lastName && 
         body.email && body.password && body.confirmPassword){
-            var userDetails = {
-                firstName: body.firstName,
-                lastName: body.lastName,
-                email: body.email,
-                password: body.password,
-            };
-            User.create(userDetails, (err, user) => {
-                if(err) {
-                    return next(err);
-                } else {
-                    res.json({
-                        message:'User is created successfully!',
-                        user: user});
-                }
-            });
+            // Making sure we only have unique emails
+            User.find({email: req.body.email}).exec()
+                .then(user => {
+                    // if user exists
+                    if(user.length >= 1){
+                        // conflict status code
+                        var err = new Error('User already exists.');
+                        res.status(409);
+                        return next(err);
+                    }
+                    var userDetails = {
+                        firstName: body.firstName,
+                        lastName: body.lastName,
+                        email: body.email,
+                        password: body.password,
+                    };
+                    User.create(userDetails, (err, user) => {
+                        if(err) {
+                            return next(err);
+                        } else {
+                            res.json({
+                                message:'User is created successfully!'
+                            });
+                        }
+                    });
+                }).catch(err => {
+                    res.status(500).json({
+                        error: err
+                    });
+                });
     } else {
         err = new Error('Some or all Feilds are missing!');
         res.status(400);
@@ -90,6 +114,31 @@ router.get('/login', (req, res) => {
         res.status(400);
         next(err);
     }
-})
+});
 
+// Route for deleting users
+
+router.delete('/:userId', (req, res, next) =>{
+    User.deleteOne({id: req.params.id })
+        .exec()
+            .then(result =>{
+                console.log("the result is ",result);
+                if(result.deletedCount != 0){
+                res.status(200).json({
+                    message: 'User was deleted!'
+                });
+                } else {
+                    var err = new Error("Unable to delete user");
+                    err.status = 400;
+                    res.json({
+                        message: err.message
+                    });
+                }
+            }
+            ).catch( err => {
+                res.status(500).json({
+                    error: "Internal Server Error!"
+                });
+            });
+});
 module.exports = router;
