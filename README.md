@@ -27,7 +27,7 @@ Installing bady parser to be able to read the body of the http request:
 
 Set up the **app.js** file by requiring the modules installed and running the express app on port 3000.
 
-# Setting up user Authentication and registeration
+# Setting up user Authentication and registration
 
 
 Registering a new user
@@ -103,10 +103,79 @@ Bcrypt: [link](https://github.com/kelektiv/node.bcrypt.js)
                 });
             }
 
+# Using JWT to Authenticate users
+
+First install jwt using npm
+
+
+                npm install jsonwebtoken --save
+
+
+In the folder where you want to use it
+
+                const jwt = require('jsonwebtoken');    
+
+Use **jwt.sign** sign method to return the token to the server after authentication.
+
+            router.get('/login', (req, res) => {
+                if( req.body.email && req.body.password){
+                    User.authenticate(req.body.email, req.body.password, function(error, user){
+                        if(error || !user){
+                            var err = new Error('Wrong email or password');
+                            err.status = 401;
+                            res.json({
+                                message: err.message
+                            });
+                        } else {
+                            // JWT goes here
+                            console.log(process.env.JWT_KEY);
+                            const token = jwt.sign({
+                                id: user._id,
+                                email: user.email,
+                            }, process.env.JWT_KEY, {
+                                expiresIn: "1h"
+                            });
+                            return res.json({
+                                user: user,
+                                token: token
+                            });
+                        }
+                        
+                    });
+                } else {
+                    Err = new Error("Fields are missing");
+                    res.status(400);
+                    next(err);
+                }
+            });
 
 
 
+#### Verifying tokens and protecting routes
+
+Using **jwt.verify** method:
+Make sure to put the token recieved by the response in the header of postman.
+Create a new files.
+
+                const { verify } = require("jsonwebtoken");
+
+                const jwt = require('jsonwebtoken');
+
+                verifyToken = (req, res, next) => {
+                    try{
+                        const token = req.headers.authorization.split(" ")[1];
+                        console.log("The token is ", token);
+                        const decoded = jwt.verify(token, process.env.JWT_KEY);
+                        req.userData = decoded;
+                    }catch (err){
+                        return res.status(401).json({
+                            message: 'Auth Failed'
+                        });
+                    }
+                    next();
+                }
 
 
+                module.exports = verifyToken;
 
 

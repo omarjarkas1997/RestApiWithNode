@@ -4,15 +4,15 @@ var User = require('../models/user');
 
 var bcrypt = require('bcrypt');
 
+const jwt = require('jsonwebtoken');
+const canAccess = require('../middleware/check-auth');
 
 router.get('/',(req,res) => {
     res.send('Helloooooooooo! It works!');
 });
-
-
 // Getting all the users 
 
-router.get('/users', function(req, res, next){
+router.get('/users',canAccess , function(req, res, next){
     var users;
     User.find({}, (err, users) => {
         if(err){
@@ -104,10 +104,24 @@ router.get('/login', (req, res) => {
             if(error || !user){
                 var err = new Error('Wrong email or password');
                 err.status = 401;
-                return next(err);
+                res.json({
+                    message: err.message
+                });
             } else {
-                res.json(user);
+                // JWT goes here
+                console.log(process.env.JWT_KEY);
+                const token = jwt.sign({
+                    id: user._id,
+                    email: user.email,
+                }, process.env.JWT_KEY, {
+                    expiresIn: "1h"
+                });
+                 return res.json({
+                     user: user,
+                     token: token
+                 });
             }
+            
         });
     } else {
         Err = new Error("Fields are missing");
