@@ -12,7 +12,7 @@ router.get('/',(req,res) => {
 });
 // Getting all the users 
 
-router.get('/users',canAccess , function(req, res, next){
+router.get('/users',canAccess, function(req, res, next){
     var users;
     User.find({}, (err, users) => {
         if(err){

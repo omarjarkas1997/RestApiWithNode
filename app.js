@@ -9,6 +9,7 @@ var mongoose = require('mongoose');
 var routes = require('./routes/routes');
 // morgan logger
 var logger = require('morgan');
+const morgan = require('morgan');
 
 // connecting to mongoDB using Mongoose
 mongoose.connect("mongodb://localhost:27017/issuelogs",{ useNewUrlParser: true, useUnifiedTopology: true });
@@ -28,6 +29,22 @@ db.on('error', console.error.bind(console,'connection error:'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+app.use(morgan('dev'));
+
+
+// assiging header to allow cors 
+app.use((req,res,next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if(req.method === 'OPTIONS') {
+        res.header('Access-Control-Allow-Methods','PUT, POST, PATCH, DELETE, GET');
+        return res.status(200).json({});
+    }
+    next();
+});
 
 // use the routes as home page url '/'
 app.use('/', routes);
