@@ -12,7 +12,7 @@ var logger = require('morgan');
 const morgan = require('morgan');
 
 // connecting to mongoDB using Mongoose
-mongoose.connect("mongodb://localhost:27017/issuelogs",{ useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect("mongodb+srv://omarjarkas:"+process.env.MONGO_ATLAS_PW+"@issueslog1.p7zgb.mongodb.net/issueslog?retryWrites=true&w=majority",{ useNewUrlParser: true, useUnifiedTopology: true });
 
 // there is a warning of deprication
 // this gets ride of it

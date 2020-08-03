@@ -58,8 +58,21 @@ router.post('/register', function(req,res,next) {
                         if(err) {
                             return next(err);
                         } else {
-                            res.json({
-                                message:'User is created successfully!'
+                            // JWT Token is returned Here
+                            console.log(process.env.JWT_KEY);
+                            const token = jwt.sign({
+                                id: user._id,
+                                email: user.email
+                            }, process.env.JWT_KEY, {
+                                expiresIn: '1h'
+                            });
+                            var userName = {
+                                firstName: user.firstName,
+                                lastName: user.lastName  
+                              };
+                            return res.json({
+                                user: userName,
+                                token: token
                             });
                         }
                     });
@@ -116,8 +129,12 @@ router.get('/login', (req, res) => {
                 }, process.env.JWT_KEY, {
                     expiresIn: "1h"
                 });
+                var userName = {
+                  firstName: user.firstName,
+                  lastName: user.lastName  
+                };
                  return res.json({
-                     user: user,
+                     user: userName,
                      token: token
                  });
             }
@@ -133,7 +150,7 @@ router.get('/login', (req, res) => {
 // Route for deleting users
 
 router.delete('/:userId', (req, res, next) =>{
-    User.deleteOne({id: req.params.id })
+    User.deleteOne({_id: req.params.userId })
         .exec()
             .then(result =>{
                 console.log("the result is ",result);
