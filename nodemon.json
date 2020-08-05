@@ -1,6 +1,0 @@
-{
-    "env": {
-        "MONGO_ATLAS_PW": "issuesLog1997",
-        "JWT_KEY":"the best is yet to come"
-    }
-}
